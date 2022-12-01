@@ -78,7 +78,6 @@ public class NavigatorAgent extends Agent {
 				WumpusPercept percept = speech.recognize(state);
 				System.out.println("Navigator: received feelings. Feelings = " + state);
 				addBehaviour(new FindActionBehaviour(percept));
-
 			} else {
 				block();
 			}
@@ -99,10 +98,12 @@ public class NavigatorAgent extends Agent {
 			ACLMessage reply = new ACLMessage(ACLMessage.PROPOSE);
 			System.out.println("Navigator: decided on action. Action = " + action);
 			String actionSentence = speech.tellAction(action);
+			reply.setLanguage("English");
+			reply.setOntology("WumpusWorld");
 			reply.setContent(actionSentence);
+			reply.addReplyTo(speleologistAid);
 			reply.addReceiver(speleologistAid);
 			myAgent.send(reply);
 		}
 	}
-
 }

@@ -95,7 +95,8 @@ public class SpeleologistAgent extends Agent {
 					request.addReceiver(environmentAid);
 					myAgent.send(request);
 					// Prepare the template to get proposals
-					mt = MessageTemplate.MatchPerformative(ACLMessage.INFORM);
+					mt = MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.INFORM),
+							MessageTemplate.MatchReplyTo(new AID[]{myAgent.getAID()}));
 					System.out.println("Speleologist: Request for current state sent.");
 					step = 1;
 					break;
@@ -115,12 +116,16 @@ public class SpeleologistAgent extends Agent {
 					}
 					break;
 				case 2:
+					// send feeling to navigator
 					ACLMessage state = new ACLMessage(ACLMessage.INFORM);
+					state.setLanguage("English");
+					state.setOntology("WumpusWorld");
 					state.addReceiver(navigatorAid);
 					String feelings = speech.tellPercept(currentState.percept);
 					state.setContent(feelings);
 					myAgent.send(state);
-					mt = MessageTemplate.MatchPerformative(ACLMessage.PROPOSE);
+					mt = MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.PROPOSE),
+							MessageTemplate.MatchReplyTo(new AID[]{myAgent.getAID()}));
 					System.out.println("Speleologist: State sent to navigator.");
 					step = 3;
 					break;
@@ -138,16 +143,19 @@ public class SpeleologistAgent extends Agent {
 					}
 					break;
 				case 4:
+					//send action to environment
 					ACLMessage action = new ACLMessage(ACLMessage.CFP);
 					action.setConversationId("environment");
 					action.addReceiver(environmentAid);
 					action.setContent(wumpusAction.getSymbol());
 					myAgent.send(action);
-					mt = MessageTemplate.MatchPerformative(ACLMessage.ACCEPT_PROPOSAL);
+					mt = MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.ACCEPT_PROPOSAL),
+							MessageTemplate.MatchReplyTo(new AID[]{myAgent.getAID()}));
 					step = 5;
 					break;
 
 				case 5:
+					//receive ok from environment
 					ACLMessage envReply = myAgent.receive(mt);
 					if(envReply != null) {
 						// Reply received

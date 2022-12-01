@@ -106,6 +106,7 @@ public class EnvironmentAgent extends Agent {
 			ACLMessage report = new ACLMessage(ACLMessage.INFORM);
 			report.setContent(objectMapper.writeValueAsString(new State(percept, tick++)));
 			report.addReceiver(speleologistAID);
+			report.addReplyTo(speleologistAID);
 			myAgent.send(report);
 			System.out.println("Environment: percept sent to speleologist");
 			System.out.println("Environment: current position: " + agentPosition);
@@ -118,6 +119,7 @@ public class EnvironmentAgent extends Agent {
 			ACLMessage report = new ACLMessage(ACLMessage.ACCEPT_PROPOSAL);
 			report.setContent("OK");
 			report.addReceiver(speleologistAID);
+			report.addReplyTo(speleologistAID);
 			System.out.println("Environment: step performed.");
 			myAgent.send(report);
 		}
