@@ -29,11 +29,16 @@ public class EnvironmentAgent extends Agent {
 	private int tick = 0;
 
 	@Override
+	protected void takeDown() {
+		System.out.println("Environment-agent " + getAID().getName() + " terminating.");
+	}
+
+	@Override
 	protected void setup() {
 		registerMe();
 		wumpusEnvironment = new WumpusEnvironment(new WumpusCave(4, 4, ""
-				+ ". W G P "
-				+ ". . P . "
+				+ ". . . P "
+				+ "W G P . "
 				+ ". . . . "
 				+ "S . P . "));
 		speleologist = new EfficientHybridWumpusAgent(4, 4, new AgentPosition(1, 1, AgentPosition.Orientation.FACING_NORTH));

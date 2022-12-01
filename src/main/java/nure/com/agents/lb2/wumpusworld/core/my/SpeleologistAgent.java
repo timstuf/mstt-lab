@@ -14,16 +14,32 @@ import jade.lang.acl.MessageTemplate;
 import jade.wrapper.ControllerException;
 import lombok.SneakyThrows;
 import nure.com.agents.lb2.wumpusworld.core.environment.wumpusworld.WumpusAction;
+import nure.com.agents.lb2.wumpusworld.core.my.naturallanguage.SimpleSpeleologistSpeech;
+import nure.com.agents.lb2.wumpusworld.core.my.naturallanguage.SpeleologistSpeech;
 
 public class SpeleologistAgent extends Agent {
 	private AID environmentAid;
 	private AID navigatorAid;
+	SpeleologistSpeech speech;
 
 	@Override
 	protected void setup() {
+		speech = new SimpleSpeleologistSpeech();
 		registerMe();
 		System.out.println("Hello! Speleologist-agent " + getAID().getName() + " is ready.");
 		addBehaviour(new SpeleologistBehaviour());
+	}
+
+	@Override
+	protected void takeDown() {
+		System.out.println("Speleologist-agent " + getAID().getName() + " terminating.");
+		try {
+			getContainerController().getAgent(navigatorAid.getLocalName()).kill();
+			getContainerController().getAgent(environmentAid.getLocalName()).kill();
+		} catch(ControllerException e) {
+			throw new RuntimeException(e);
+		}
+		System.exit(0);
 	}
 
 	private void registerMe() {
@@ -43,7 +59,7 @@ public class SpeleologistAgent extends Agent {
 	class SpeleologistBehaviour extends Behaviour {
 		WumpusAction wumpusAction;
 		ObjectMapper objectMapper = new ObjectMapper();
-		private MessageTemplate mt; // The template to receive replies
+		private MessageTemplate mt;
 		private State currentState;
 		private int step = 0;
 
@@ -101,7 +117,8 @@ public class SpeleologistAgent extends Agent {
 				case 2:
 					ACLMessage state = new ACLMessage(ACLMessage.INFORM);
 					state.addReceiver(navigatorAid);
-					state.setContent(objectMapper.writeValueAsString(currentState));
+					String feelings = speech.tellPercept(currentState.percept);
+					state.setContent(feelings);
 					myAgent.send(state);
 					mt = MessageTemplate.MatchPerformative(ACLMessage.PROPOSE);
 					System.out.println("Speleologist: State sent to navigator.");
@@ -113,9 +130,8 @@ public class SpeleologistAgent extends Agent {
 					if(reply2 != null) {
 						// Reply received
 						String action = reply2.getContent();
-						wumpusAction = objectMapper.readValue(action, WumpusAction.class);
-						System.out.println("Speleologist: Action received from navigator.");
-
+						wumpusAction = speech.recognize(action);
+						System.out.println("Speleologist: Action received from navigator. Action = " + action);
 						step = 4;
 					} else {
 						block();
@@ -153,12 +169,7 @@ public class SpeleologistAgent extends Agent {
 				case 6:
 					System.out.println("Game over");
 					step = 7;
-					try {
-						myAgent.doDelete();
-						myAgent.getContainerController().getPlatformController().kill();
-					} catch(final ControllerException e) {
-						System.out.println("Failed to end simulation.");
-					}
+					myAgent.doDelete();
 					break;
 
 			}
